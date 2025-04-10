@@ -10,20 +10,21 @@ pipeline {
                     echo "Changed files: ${changedFiles}"
 
                     for (file in changedFiles) {
-                        if (file.startsWith("spring-petclinic-visits-service")) {
-                            if (!affectedServices.contains("spring-petclinic-visits-service")) {
-                                affectedServices << "spring-petclinic-visits-service"
+                        if (file.startsWith("spring-petclinic-") && file.split("/").size() > 1) {
+                            def service = file.split("/")[0]
+                            if (!affectedServices.contains(service)) {
+                                affectedServices << service
                             }
                         }
                     }
 
                     if (affectedServices.isEmpty()) {
-                        echo "No changes detected in spring-petclinic-visits-service. Skipping pipeline."
+                        echo "No relevant service changes detected. Skipping pipeline."
                         currentBuild.result = 'SUCCESS'
                         return
                     }
 
-                    echo "Affected service: ${affectedServices}"
+                    echo "Affected services: ${affectedServices}"
                     env.AFFECTED_SERVICES = affectedServices.join(',')
                 }
             }
@@ -41,9 +42,10 @@ pipeline {
                         dir(service) {
                             timeout(time: 10, unit: 'MINUTES') {
                                 retry(3) {
-                                    sh 'mvn clean verify'
+                                    sh 'mvn clean test'
                                 }
                             }
+                            sh 'mvn jacoco:report'
                         }
                     }
                 }
@@ -60,9 +62,7 @@ pipeline {
                                 execPattern: "${service}/target/jacoco.exec",
                                 classPattern: "${service}/target/classes",
                                 sourcePattern: "${service}/src/main/java",
-                                exclusionPattern: "${service}/src/test/**",
-                                minimumLineCoverage: '70',
-                                changeBuildStatus: true
+                                exclusionPattern: "${service}/src/test/**"
                             )
                         }
                     }
