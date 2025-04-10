@@ -1,6 +1,4 @@
 pipeline {
-    agent { label 'agent-1 || agent-2' }
-
     stages {
         stage('Detect Changes') {
             steps {
@@ -80,7 +78,7 @@ pipeline {
                     for (service in affectedServices) {
                         echo "Building service: ${service} on ${env.NODE_NAME}"
                         dir(service) {
-                            sh 'mvn clean package -DskipTests'
+                            sh 'mvn clean package -DskipTests -am -q'
                         }
                     }
                 }
