@@ -38,3 +38,4 @@ class VisitTest {
         assertEquals(date, visit.getDate());
     }
 }
+// change
